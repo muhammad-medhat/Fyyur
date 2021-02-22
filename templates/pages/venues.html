@@ -1,6 +1,13 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Fyyur | Venues{% endblock %}
 {% block content %}
+<!-- ==========================
+{% for field, value in areas.get_fields %}
+    <li> {{ field }} : {{ value }}</li>
+{% endfor %}
+djkhgfkfj,hg -->
+
+{{data}}
 {% for area in areas %}
 <h3>{{ area.city }}, {{ area.state }}</h3>
 	<ul class="items">

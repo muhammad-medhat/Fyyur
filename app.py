@@ -9,7 +9,7 @@ from flask import Flask, render_template, request, Response, flash, redirect, ur
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
-from logging import Formatter, FileHandler
+from logging import Formatter, FileHandler, critical
 from flask_wtf import Form
 from forms import *
 
@@ -17,8 +17,10 @@ from forms import *
 # from flask_sqlalchemy.dialects.postgres.enumerated import Enum
 from flask_migrate import Migrate
 # from dbmodels import *
-
-
+# from SQLAlchemy import Enum
+from sqlalchemy.sql import text
+from sqlalchemy.orm import *
+import enum
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -29,14 +31,37 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 mg=Migrate(app, db)
 
-# TODO: connect to a local postgresql database
+
 #---------------------------------------------------------------------------#
-# Models moved to dbmodels.py
+# Custom types
+#---------------------------------------------------------------------------#
+class GenresEnum(enum.Enum):
+        Alternative     ='Alternative',
+        Blues           ='Blues',
+        Classical       ='Classical',
+        Country         ='Country',
+        Electronic      ='Electronic',
+        Folk            ='Folk',
+        Funk            ='Funk',
+        HipHop          ='Hip-Hop',
+        HeavyMetal      ='Heavy Metal',
+        Instrumental    ='Instrumental',
+        Jazz            ='Jazz',
+        MusicalTheatre  ='Musical Theatre',
+        Pop             ='Pop',
+        Punk            ='Punk',
+        RnB             ='R&B',
+        Reggae          ='Reggae',
+        RocknRoll       ='Rock n Roll',
+        Soul            ='Soul',
+        Other           ='Other'
+#---------------------------------------------------------------------------#
+# Models
 #---------------------------------------------------------------------------#
 # DONE Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 shows=db.Table('shows',    
-    db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id'), primary_key=True),
-    db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id'), primary_key=True),
+    db.Column('venue_id', db.Integer, db.ForeignKey('Venue.id', primary_key=True)),
+    db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id', primary_key=True)),
     db.Column('start_date', db.DateTime)
 )
 # genres = db.Table('venuegenres', 
@@ -53,12 +78,11 @@ class Venue(db.Model):
     image_link    = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # TODO - DONE: implement any missing fields, as a database migration using Flask-Migrate
     website             = db.Column(db.String(256))
     seeking_description = db.Column(db.String(256))   
     seeking_talent      = db.Column(db.Boolean, default=False)
-
-    # genres = db.Column('genres', db.String(50)) #Enum("Jazz", "Reggae", "Swing", "Classical", "Folk", "Rock n Roll"))
+    genres = db.Column('genres', db.Enum(GenresEnum))
     artists = db.relationship('Artist', secondary=shows, backref=db.backref('Venue', lazy=True))
     def __repr__(self):
         return f"<Venue id:{self.id}, name:{self.name}>"
@@ -75,7 +99,7 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
-    # genres = db.Column( 'genres', db.String(50))#Enum("Jazz", "Reggae", "Swing", "Classical", "Folk", "Rock n Roll") )
+    genres = db.Column('genres', db.Enum(GenresEnum))
     def __repr__(self):
         return f"<Artist id:{self.id}, name:{self.name}>"
 db.create_all()
@@ -92,6 +116,44 @@ def format_datetime(value, format='medium'):
   return babel.dates.format_datetime(date, format)
 
 app.jinja_env.filters['datetime'] = format_datetime
+
+# -----------------------------------------
+# Functions
+# -----------------------------------------
+def get_cities():
+      # venue_alias = aliased(Venue, name='name')
+      # q = db.session.query(Venue, Venue.id, venue_alias)
+
+      # # this expression:
+      # return q.column_descriptions
+      # return db.session.query(Venue.city, Venue.state)
+      
+      
+      # return db.session.query(Venue, 'city', 'state')
+      citystate = text("""
+          Select distinct city, state
+          from "Venue" 
+      """)
+      return db.engine.execute(citystate)
+    
+def get_vens_by_city( c_name):
+    q = text("""
+          Select id, name
+          from "Venue" where city=:city
+      """)
+    return db.engine.execute(q, city=c_name)
+
+def get_venues():
+    cities = get_cities()
+    for c in cities:
+        dict_c = dict(c)
+        vens=dict({"Venues": dict(get_vens_by_city(c.city).fetchall())})
+    return (dict(dict_c, **vens))
+def get_vlist():
+      vens=[]
+      for c in get_cities():
+            vens.append(c)
+      return vens
 
 # db.create_all()
 #----------------------------------------------------------------------------#
@@ -110,28 +172,31 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  # data = Venue.query.all()
+  # data=[{
+  #   "city": "San Francisco",
+  #   "state": "CA",
+  #   "venues": [{
+  #     "id": 1,
+  #     "name": "The Musical Hop",
+  #     "num_upcoming_shows": 0,
+  #   }, {
+  #     "id": 3,
+  #     "name": "Park Square Live Music & Coffee",
+  #     "num_upcoming_shows": 1,
+  #   }]
+  # }, {
+  #   "city": "New York",
+  #   "state": "NY",
+  #   "venues": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }]
+
+  data=get_venues()
+  print(data)
+  
   return render_template('pages/venues.html', areas=data);
 
 @app.route('/venues/search', methods=['POST'])
@@ -238,6 +303,7 @@ def show_venue(venue_id):
 
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
+      #########################################################################
   form = VenueForm()
   return render_template('forms/new_venue.html', form=form)
 
