@@ -1,10 +1,20 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Venue Search{% endblock %}
 {% block content %}
+<style>
+	.btn-delete{
+		font-size: larger;
+	}
+	.btn-delete:hover{
+		font-weight: bold;
+	}
+</style>
 <div class="row">
 	<div class="col-sm-6">
 		<h1 class="monospace">
-			{{ venue.name }}
+			{{ venue.name }}			
+			<a id='btnDelete' href="#" class='btn-delete'>&cross;</a>
+
 		</h1>
 		<p class="subtitle">
 			ID: {{ venue.id }}
@@ -74,6 +84,16 @@
 		{% endfor %}
 	</div>
 </section>
-
+<script>
+	document.getElementById('btnDelete').addEventListener('click', ()=>{
+		fetch(`/venues/{{venue.id}}/`, {
+            method: 'DELETE', 
+            headers:{'Content-Type':'Application/json'},
+			body:JSON.stringify({
+				venue_id: {{venue.id}}
+			})
+        })
+	})
+</script>
 {% endblock %}
 

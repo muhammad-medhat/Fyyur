@@ -10,16 +10,17 @@ from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging import Formatter, FileHandler, critical
-from flask_wtf import Form
+from flask_wtf import FlaskForm
+# from flask_wtf import Form
+from sqlalchemy.sql.expression import false
 from forms import *
 
 # from SQLAlchemy import asc, desc
 # from flask_sqlalchemy.dialects.postgres.enumerated import Enum
 from flask_migrate import Migrate
-# from dbmodels import *
-# from SQLAlchemy import Enum
 from sqlalchemy.sql import text
 from sqlalchemy.orm import *
+from sqlalchemy import *
 import enum
 #----------------------------------------------------------------------------#
 # App Config.
@@ -64,8 +65,7 @@ shows=db.Table('shows',
     db.Column('artist_id', db.Integer, db.ForeignKey('Artist.id', primary_key=True)),
     db.Column('start_date', db.DateTime)
 )
-# genres = db.Table('venuegenres', 
-#                   db.col)
+
 class Venue(db.Model):
     __tablename__ = 'Venue'
 
@@ -99,10 +99,14 @@ class Artist(db.Model):
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    address             = db.Column(db.String(120))
+    website             = db.Column(db.String(256))
+    seeking_description = db.Column(db.String(256))   
+    seeking_talent      = db.Column(db.Boolean, default=False)
     genres = db.Column('genres', db.Enum(GenresEnum))
     def __repr__(self):
         return f"<Artist id:{self.id}, name:{self.name}>"
-db.create_all()
+# db.create_all()
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -155,7 +159,6 @@ def get_vlist():
             vens.append(c)
       return vens
 
-# db.create_all()
 #----------------------------------------------------------------------------#
 # Controllers.
 #----------------------------------------------------------------------------#
@@ -172,30 +175,30 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  # data=[{
-  #   "city": "San Francisco",
-  #   "state": "CA",
-  #   "venues": [{
-  #     "id": 1,
-  #     "name": "The Musical Hop",
-  #     "num_upcoming_shows": 0,
-  #   }, {
-  #     "id": 3,
-  #     "name": "Park Square Live Music & Coffee",
-  #     "num_upcoming_shows": 1,
-  #   }]
-  # }, {
-  #   "city": "New York",
-  #   "state": "NY",
-  #   "venues": [{
-  #     "id": 2,
-  #     "name": "The Dueling Pianos Bar",
-  #     "num_upcoming_shows": 0,
-  #   }]
-  # }]
+  data=[{
+    "city": "San Francisco",
+    "state": "CA",
+    "venues": [{
+      "id": 1,
+      "name": "The Musical Hop",
+      "num_upcoming_shows": 0,
+    }, {
+      "id": 3,
+      "name": "Park Square Live Music & Coffee",
+      "num_upcoming_shows": 1,
+    }]
+  }, {
+    "city": "New York",
+    "state": "NY",
+    "venues": [{
+      "id": 2,
+      "name": "The Dueling Pianos Bar",
+      "num_upcoming_shows": 0,
+    }]
+  }]
 
-  data=get_venues()
-  print(data)
+  # data=get_venues()
+  # print(data)
   
   return render_template('pages/venues.html', areas=data);
 
@@ -204,13 +207,21 @@ def search_venues():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for Hop should return "The Musical Hop".
   # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
-  response={
-    "count": 1,
-    "data": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 2,
+  #     "name": "The Dueling Pianos Bar",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
+  search_term = request.form['search_term']
+  res = Venue.query.filter(Venue.name.like(f'%{search_term}%')).all()
+  response = {
+    "count": len(res), 
+    "data": [
+      res
+    ]
   }
   return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -303,7 +314,6 @@ def show_venue(venue_id):
 
 @app.route('/venues/create', methods=['GET'])
 def create_venue_form():
-      #########################################################################
   form = VenueForm()
   return render_template('forms/new_venue.html', form=form)
 
@@ -311,13 +321,92 @@ def create_venue_form():
 def create_venue_submission():
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  
+  #   post_data = {
+  #     "name"          : request.get_json('name'),
+  #     "city"          : request.get_json('city'),
+  #     "state"         : request.get_json('state'),
+  #     "phone"         : request.get_json('phone'),
+  #     "address"       : request.get_json('address'),
+  #     "genres"        : request.get_json('genres'),
+  #     "facebook_link" : request.get_json('facebook_link')
+  # }
+  #   print('===============================================')
+  #   print('===============================================')
+  #   print('===============================================')
+  #   print('===============================================')
+  #   print(post_data)
+  #   v = Venue(
+  #         name=           post_data['name'],
+  #         city=           post_data['city'],
+  #         state=          post_data['state'],
+  #         phone=          post_data['phone'],
+  #         address=        post_data['address'],
+  #         genres=         post_data['genres'],
+  #         facebook_link=  post_data['facebook_link']
+  #       )
+  #   print('venues')
+  #   print(v)
+  #   db.session.add(v)
+  #   db.session.commit()          
+  form = form = VenueForm()
 
-  # on successful db insert, flash success
-  flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  # TODO: on unsuccessful db insert, flash an error instead.
-  # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
+  post_data = {
+      "name"          : form.name.data, 
+      "city"          : form.city.data, 
+      "state"         : form.state.data, 
+      "phone"         : form.phone.data, 
+      "address"       : form.address.data , 
+      "genres"        : form.genres.data , 
+      "facebook_link" : form.facebook_link.data 
+  }
+  print(post_data)
+  try :
+      if form.validate_on_submit():
+        print('------------ try block validated ------------------------')
+     
+
+        # q = text("""
+        #   INSERT INTO "Venue" VALUES(
+        #     :name,
+        #     :city,
+        #     :stat,
+        #     :phon,
+        #     :address,
+        #     :genres,
+        #     :facebook_link
+        #   )
+          
+        # """)
+        # db.engine.execute(q, data)
+        # db.engine.commit()
+    # return db.engine.execute(q, city=c_name)
+        v = Venue(
+          name=           post_data['name'],
+          city=           post_data['city'],
+          state=          post_data['state'],
+          phone=          post_data['phone'],
+          address=        post_data['address'],
+          genres=         post_data['genres'],
+          facebook_link=  post_data['facebook_link']
+        )
+        print('venues')
+        print(v)
+        db.session.add(v)
+        db.session.commit()           
+        # on successful db insert, flash success
+        flash(f"Venue  {request.form['name'] } was successfully listed!")
+      else:
+            print("----------------- try not validated-----------------")
+  except:
+      # TODO: on unsuccessful db insert, flash an error instead.
+      flash(f"An error occurred. Venue {request.form['name']} could not be listed.")
   # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-  return render_template('pages/home.html')
+  return redirect(url_for('index'))
+
+
+
+
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
 def delete_venue(venue_id):
@@ -326,7 +415,16 @@ def delete_venue(venue_id):
 
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
-  return None
+  try:
+    vnu= Venue.query.get(venue_id)
+    db.session.delete(vnu)
+    db.session.commit()  
+    flash(f"Venue  {request.form['name'] } deleted ")
+    return redirect(url_for('index'))
+  except:
+    db.session.rollback()
+    flash(f"Can not delete Venue  {request.form['name'] } ")
+
 
 #  Artists
 #  ----------------------------------------------------------------
@@ -341,13 +439,21 @@ def search_artists():
   # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
   # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
   # search for "band" should return "The Wild Sax Band".
-  response={
-    "count": 1,
-    "data": [{
-      "id": 4,
-      "name": "Guns N Petals",
-      "num_upcoming_shows": 0,
-    }]
+  # response={
+  #   "count": 1,
+  #   "data": [{
+  #     "id": 4,
+  #     "name": "Guns N Petals",
+  #     "num_upcoming_shows": 0,
+  #   }]
+  # }
+  search_term = request.form['search_term']
+  res = Artist.query.filter(Artist.name.like(f'%{search_term}%')).all()
+  response = {
+    "count": len(res), 
+    "data": [
+      res
+    ]
   }
   return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
 
@@ -496,6 +602,49 @@ def create_artist_submission():
   # called upon submitting the new artist listing form
   # TODO: insert form data as a new Venue record in the db, instead
   # TODO: modify data to be the data object returned from db insertion
+  
+  form = form = ArtistForm()
+
+  post_data = {
+      "name"          : form.name.data, 
+      "city"          : form.city.data, 
+      "state"         : form.state.data, 
+      "phone"         : form.phone.data, 
+      "address"       : form.address.data , 
+      "genres"        : form.genres.data , 
+      "facebook_link" : form.facebook_link.data 
+  }
+  print(post_data)
+  try :
+      if form.validate_on_submit():
+        print('------------ try block validated ------------------------')
+     
+        art = Artist(
+          name=           post_data['name'],
+          city=           post_data['city'],
+          state=          post_data['state'],
+          phone=          post_data['phone'],
+          address=        post_data['address'],
+          genres=         post_data['genres'],
+          facebook_link=  post_data['facebook_link']
+        )
+        print('venues')
+        print(art)
+        db.session.add(art)
+        db.session.commit()           
+        # on successful db insert, flash success
+        flash(f"Artist  {request.form['name'] } was successfully listed!")
+      else:
+            print("----------------- try not validated-----------------")
+  except:
+      # TODO: on unsuccessful db insert, flash an error instead.
+      flash(f"An error occurred. Artist {request.form['name']} could not be listed.")
+  
+  
+  
+  
+  
+  
 
   # on successful db insert, flash success
   flash('Artist ' + request.form['name'] + ' was successfully listed!')
