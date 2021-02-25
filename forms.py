@@ -76,7 +76,7 @@ class VenueForm(Form):
             ('WA', 'WA'),
             ('WV', 'WV'),
             ('WI', 'WI'),
-            ('WY', 'WY')
+            ('WY', 'WY'),
         ]
     )
     address = StringField(
@@ -89,8 +89,7 @@ class VenueForm(Form):
         'image_link'
     )
     genres = SelectMultipleField(
-        # TODO - DONE implement enum restriction
-        # created a new column with datatype enum
+        # TODO implement enum restriction
         'genres', validators=[DataRequired()],
         choices=[
             ('Alternative', 'Alternative'),
@@ -111,7 +110,7 @@ class VenueForm(Form):
             ('Reggae', 'Reggae'),
             ('Rock n Roll', 'Rock n Roll'),
             ('Soul', 'Soul'),
-            ('Other', 'Other')
+            ('Other', 'Other'),
         ]
     )
     facebook_link = StringField(
@@ -185,6 +184,9 @@ class ArtistForm(Form):
         # TODO implement validation logic for state
         'phone'
     )
+    address = StringField(
+        'address', validators=[DataRequired()]
+    )
     image_link = StringField(
         'image_link'
     )
@@ -215,11 +217,8 @@ class ArtistForm(Form):
     )
     facebook_link = StringField(
         # TODO implement enum restriction
-        'facebook_link', validators=[URL()]
+        # 'facebook_link', validators=[URL()]
+        'facebook_link'
     )
-    address = StringField(
-        'address', validators=[DataRequired()]
-    )
-
 
 # TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM

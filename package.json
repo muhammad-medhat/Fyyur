@@ -11,14 +11,5 @@
   "license": "ISC",
   "dependencies": {
     "bootstrap": "^3.4.1"
-  },
-  "devDependencies": {},
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/muhammad-medhat/Fyyur.git"
-  },
-  "bugs": {
-    "url": "https://github.com/muhammad-medhat/Fyyur/issues"
-  },
-  "homepage": "https://github.com/muhammad-medhat/Fyyur#readme"
+  }
 }

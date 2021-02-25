@@ -3,21 +3,21 @@
 {% block content %}
 <style>
 	.btn-delete{
-		font-size: larger;
+		font-size: x-large;
 	}
 	.btn-delete:hover{
 		font-weight: bold;
+		text-decoration: none;
 	}
 </style>
 <div class="row">
 	<div class="col-sm-6">
 		<h1 class="monospace">
-			{{ venue.name }}			
-			<a id='btnDelete' href="#" class='btn-delete'>&cross;</a>
-
+			{{ venue.name }}
 		</h1>
 		<p class="subtitle">
-			ID: {{ venue.id }}
+			ID: {{ venue.id }}		
+			<a id='btnDelete' href="#" class='btn-delete'>&cross;</a>
 		</p>
 		<div class="genres">
 			{% for genre in venue.genres %}
@@ -86,13 +86,14 @@
 </section>
 <script>
 	document.getElementById('btnDelete').addEventListener('click', ()=>{
-		fetch(`/venues/{{venue.id}}/`, {
-            method: 'DELETE', 
-            headers:{'Content-Type':'Application/json'},
-			body:JSON.stringify({
-				venue_id: {{venue.id}}
-			})
-        })
+		if(confirm("Are you sure you want to delete:: {{venue.name}}")){
+			fetch(`/venues/{{venue.id}}/`, {
+				method: 'DELETE', 
+				headers:{'Content-Type':'Application/json'},
+			}).then(res=> res.json())
+			.then(location.replace('/'))	
+		}
+
 	})
 </script>
 {% endblock %}

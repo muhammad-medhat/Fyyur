@@ -1,6 +1,15 @@
 {% extends 'layouts/main.html' %}
 {% block title %}{{ artist.name }} | Artist{% endblock %}
 {% block content %}
+<style>
+	.btn-option{
+		font-size: x-large;
+	}
+	.btn-option:hover{
+		font-weight: bold;
+		text-decoration: none;
+	}
+</style>
 <div class="row">
 	<div class="col-sm-6">
 		<h1 class="monospace">
@@ -8,6 +17,9 @@
 		</h1>
 		<p class="subtitle">
 			ID: {{ artist.id }}
+			<a id='btnDelete' href="#" class='btn-delete btn-option'>&cross;</a>
+			<a id='btnDelete' href="/artists/{{artist.id}}/edit" class='btn-update btn-option'>🖊️</a>
+
 		</p>
 		<div class="genres">
 			{% for genre in artist.genres %}
@@ -68,6 +80,18 @@
 				<h6>{{ show.start_time|datetime('full') }}</h6>
 			</div>
 		</div>
+		<script>
+			document.getElementById('btnDelete').addEventListener('click', ()=>{
+				if(confirm("Are you sure you want to delete:: {{artist.name}}")){
+					fetch(`/aetists/{{artist.id}}/`, {
+						method: 'DELETE', 
+						headers:{'Content-Type':'Application/json'},
+					}).then(res=> res.json())
+					.then(location.replace('/'))	
+				}
+		
+			})
+		</script>
 		{% endfor %}
 	</div>
 </section>
