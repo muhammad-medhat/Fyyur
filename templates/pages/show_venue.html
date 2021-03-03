@@ -2,10 +2,10 @@
 {% block title %}Venue Search{% endblock %}
 {% block content %}
 <style>
-	.btn-delete{
+	.btn-option{
 		font-size: x-large;
 	}
-	.btn-delete:hover{
+	.btn-option:hover{
 		font-weight: bold;
 		text-decoration: none;
 	}
@@ -17,7 +17,9 @@
 		</h1>
 		<p class="subtitle">
 			ID: {{ venue.id }}		
-			<a id='btnDelete' href="#" class='btn-delete'>&cross;</a>
+			<a id='btnDelete' href="#" class='btn-option'>&cross;</a>
+			<a id='btnEdit' href="/venues/{{venue.id}}/edit" class='btn-update btn-option'>🖊️</a>
+
 		</p>
 		<div class="genres">
 			{% for genre in venue.genres %}

@@ -1,7 +1,6 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Fyyur | Venues{% endblock %}
 {% block content %}
-{{areas}}
 {% for area in areas %}
 <h3>{{ area.city }}, {{ area.state }}</h3>
 	<ul class="items">
@@ -10,7 +9,7 @@
 			<a href="/venues/{{ venue.id }}">
 				<i class="fas fa-music"></i>
 				<div class="item">
-					<h5>{{ venue.name }}</h5>
+					<h5>{{ venue.name }} (Upcoming Shows: {{num_upcoming_shows}})</h5>
 				</div>
 			</a>
 		</li>
