@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
 
+
 db_name='fyyur'
 db_path = f'postgres://postgres:1111@localhost:5432/{db_name}'
 
@@ -14,6 +15,8 @@ setup_db(app)
 Binds the flask application with the sqlclemy service
 '''
 def setup_db(app, db_path=db_path):
+    SECRET_KEY = 'secret'
+    app.config['SECRET_KEY'] = SECRET_KEY
     app.config['SQLALCHEMY_DATABASE_URI'] = db_path
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.app=app

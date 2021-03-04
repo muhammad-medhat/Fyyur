@@ -13,4 +13,4 @@ DEBUG = True
 SQLALCHEMY_DATABASE_URI = 'postgres://postgres:1111@localhost:5432/fyyur'
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-SECRET_KEY = 'AAAAaaaa1111!!!!'
+SECRET_KEY = 'secret'
