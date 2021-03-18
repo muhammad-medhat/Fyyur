@@ -56,6 +56,8 @@ class Venue(db.Model):
             db.session.rollback()
 
     def update(self):
+        print(']=========update')
+        print(self)
         try:
             db.session.add(self)
             db.session.commit()
@@ -144,6 +146,8 @@ class Artist(db.Model):
     }    
     def get_shows(self, sh='al'):
         return []
+
+
 class Show(db.Model):
     __tablename__ = 'shows'
     id = db.Column(db.Integer, primary_key=True)
@@ -152,3 +156,13 @@ class Show(db.Model):
     start_time = db.Column(db.DateTime)
 
     artist = db.relationship('Artist', backref=db.backref('shows'))
+    
+    def insert(self):
+        
+        print('==== INSERT SHOW ===')
+        print(self)
+        try:
+            db.session.add(self)
+            db.session.commit()
+        except:
+            db.session.rollback()   

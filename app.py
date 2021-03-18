@@ -66,9 +66,16 @@ def create_app(test_config=None):
         """
         venue_shows=[]
         if sh == 'nx':
-        # GET Upcoming shows
-            venue_shows = db.session.query(Show).join(Venue).join(Artist).filter( 
-                                    Venue.id==venue_id, Show.start_time>datetime.now()
+            # shows_list = db.session.query(Show)\
+            #                           .join(Venue, Show.venue_id == Venue.id)\
+            #                           .join(Artist, Show.artist_id == Artist.id)\
+            #                           .all()
+            # GET Upcoming shows
+            venue_shows = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter( 
+                                      Venue.id==venue_id, Show.start_time>datetime.now()
                                     ).all()
             
         elif sh=='pv':
@@ -80,6 +87,44 @@ def create_app(test_config=None):
             # GET all shows
             venue_shows = db.session.query(Show).join(Venue).join(Artist).filter( Venue.id==venue_id).all()
         # print(venue_shows)
+        return venue_shows
+
+    def get_artist_shows(artist_id, sh='al'):
+            # return []
+        """
+        Function to get shows of this venue
+        Args:
+            sh (str, optional): Defaults to 'all' gets all shows for the selected venue.
+            sh (str, optional): 'nx' gets all next shows for the selected venue.
+            sh (str, optional): 'pv' gets all previous shows for the selected venue.
+        """
+        venue_shows=[]
+        if sh == 'nx':
+
+            # GET Upcoming shows
+            artist_shows = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter( 
+                                      Artist.id==artist_id, Show.start_time>datetime.now()
+                                    ).all()
+            
+        elif sh=='pv':
+            # GET previous shows
+            venue_shows = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter( 
+                                      Artist.id==artist_id, Show.start_time<datetime.now()
+                                    ).all()        
+        else:
+            # GET all shows
+            venue_shows = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter( 
+                                      Artist.id==artist_id
+                                    ).all()
         return venue_shows
 
 
@@ -150,14 +195,14 @@ def create_app(test_config=None):
         "image_link": v.image_link,
         "past_shows": [{
           "artist_id": s.artist_id,
-          "artist_name":s.artist_name,
-          "artist_image_link":s.artist_image_link ,
+          "artist_name": Artist.query.get(s.artist_id).name, 
+          "artist_image_link": Artist.query.get(s.artist_id).image_link ,
           "start_time":s.start_time 
           } for s in get_venue_shows(v.id, 'pv')], 
         "upcoming_shows": [{
           "artist_id": s.artist_id,
-          "artist_name":s.artist_name,
-          "artist_image_link":s.artist_image_link ,
+          "artist_name": Artist.query.get(s.artist_id).name,
+          "artist_image_link": Artist.query.get(s.artist_id).image_link ,
           "start_time":s.start_time 
           } for s in get_venue_shows(v.id, 'nx')],
         "past_shows_count": len(get_venue_shows(v.id, 'pv')),
@@ -254,7 +299,7 @@ def create_app(test_config=None):
       data={
         "id":                  art.id ,
         "name":                art.name,
-        "genres":              art.genres,
+        "genres":              [art.genres],
         "city":                art.city,
         "state":               art.state, 
         "phone":               art.phone,
@@ -263,18 +308,29 @@ def create_app(test_config=None):
         "seeking_talent":      art.seeking_talent,
         "seeking_description": art.seeking_description,
         "image_link":          art.image_link,
-        "past_shows": [],
-        "upcoming_shows": [],    
-        "past_shows_count": 1,
-        "upcoming_shows_count":1
+        
+        "past_shows": [{
+          "venue_id": s.venue_id,
+          "venue_name": Venue.query.get(s.venue_id).name ,  
+          "venue_image_link": Venue.query.get(s.venue_id).image_link  ,
+          "start_time": s.start_time.strftime("%m/%d/%Y, %H:%M")           
+          } for s in get_artist_shows(art.id, 'pv')],
+        
+        "upcoming_shows":  [{
+          "venue_id": s.venue_id,
+          "venue_name": Venue.query.get(s.venue_id).name ,  
+          "venue_image_link": Venue.query.get(s.venue_id).image_link  ,
+          "start_time": s.start_time.strftime("%m/%d/%Y, %H:%M")           
+          } for s in get_artist_shows(art.id, 'nx')],
+
+        "past_shows_count": len(get_artist_shows(art.id, 'pv')),
+        "upcoming_shows_count": len(get_artist_shows(art.id, 'nx'))
       }
-      # {
-      #     "venue_id": 1,
-      #     "past_shows": [{
+      
       #     "venue_id": 1,
       #     "venue_name": "The  " ,  
       #     "venue_image_link": "" ,
-      #     "start_time": "2019"     
+      #     "start_time":      
 
 
       return render_template('pages/show_artist.html', artist=data)
@@ -314,13 +370,10 @@ def create_app(test_config=None):
         "seeking_description": v.seeking_description, 
         "image_link": v.image_link
       }
-      # TODO: populate form with values from venue with ID <venue_id>
       return render_template('forms/edit_venue.html', form=form, venue=venue)
 
     @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
     def edit_venue_submission(venue_id):
-      # TODO: take values from the form submitted, and update existing
-      # venue record with ID <venue_id> using the new attributes
       v = Venue.query.get(venue_id)
       form = VenueForm()
       post_data = {
@@ -333,9 +386,12 @@ def create_app(test_config=None):
           "facebook_link" : form.facebook_link.data,
           "image_link"    : form.image_link.data 
       }
-      print(post_data)
       try :
+        print('=== befor validation ========')
+        print(form.errors)
         if form.validate_on_submit():
+          print('===after validation ========')
+
           v = Venue(
             name=           post_data['name'],
             city=           post_data['city'],
@@ -347,13 +403,13 @@ def create_app(test_config=None):
             image_link=     post_data['image_link']
           )
           print(v.format())
+          print('=======================')
           v.update()
           print('update')
           flash(f"Venue  {request.form['name'] } was successfully edited!")
         else:
           flash(f"An error occurred. Venue {request.form['name']} could not be edited.")
       except:
-        # TODO: on unsuccessful db insert, flash an error instead.
         flash(f"An error occurred. Venue {request.form['name']} could not be edited.")
 
       return redirect(url_for('show_venue', venue_id=venue_id))
@@ -384,9 +440,7 @@ def create_app(test_config=None):
       print(form)
       print(post_data)
       try :
-          # print('before valid')
           if form.validate_on_submit():
-            print('after valid')
             art = Artist(
               name=           post_data['name'],
               city=           post_data['city'],
@@ -406,13 +460,11 @@ def create_app(test_config=None):
               flash(f"An error occurred. Artist {request.form['name']} could not be listed.")
 
       except:
-          # TODO: on unsuccessful db insert, flash an error instead.
           flash(f"An error occurred. Artist {request.form['name']} could not be listed.")
       finally:
           flash(form.errors)
 
 
-      # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
       return redirect(url_for('index'))
 
 
@@ -422,9 +474,7 @@ def create_app(test_config=None):
 
     @app.route('/shows')
     def shows():
-      # displays list of shows at /shows
-      # TODO: replace with real venues data.
-      #       num_shows should be aggregated based on number of upcoming shows per venue.
+    #       num_shows should be aggregated based on number of upcoming shows per venue.
     #   q = text("""
     #       select v.id as venue_id , v.name as venue_name, a.id as artist_id, a.name as artist_name, 
     #       a.image_link as artist_image_link, s.start_time
@@ -437,7 +487,6 @@ def create_app(test_config=None):
           .join(Venue, Show.venue_id == Venue.id)\
           .join(Artist, Show.artist_id == Artist.id)\
           .all()
-      print(shows_list)
       ret = [{     
             "venue_id": s.venue_id,
             "venue_name": Venue.query.get(s.venue_id).name,
@@ -457,17 +506,29 @@ def create_app(test_config=None):
 
     @app.route('/shows/create', methods=['POST'])
     def create_show_submission():
-      # called to create new shows in the db, upon submitting new show listing form
-      # TODO: insert form data as a new Show record in the db, instead
-
-      # on successful db insert, flash success
-      flash('Show was successfully listed!')
-      # TODO: on unsuccessful db insert, flash an error instead.
-      # e.g., flash('An error occurred. Show could not be listed.')
-      # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
+          
+      form = ShowForm() 
+      post_data = {
+          "artist_id"  : form.artist_id.data, 
+          "venue_id"   : form.venue_id.data, 
+          "start_time" : form.start_time.data
+      }
+      try :
+        if form.validate_on_submit():
+          print('after valid')
+          sh = Show(
+            artist_id  = post_data["artist_id" ],
+            venue_id   = post_data["venue_id"  ],
+            start_time = post_data["start_time"]
+          )
+          sh.insert()
+          flash('Show was successfully listed!')
+      except:
+        flash('An error occurred. Show could not be listed.')       
       return render_template('pages/home.html')
-    #######################################################
-    @app.route('/venues/add', methods=['POST', 'GET'])
+    
+    #########################Just for testing ##############################
+    # @app.route('/venues/add', methods=['POST', 'GET'])
     def add_vnu():
           try:
             post_data=request
