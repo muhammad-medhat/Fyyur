@@ -1,4 +1,4 @@
-udacity
-.vscode
-__pycache__
-node_modules
+udacity/
+.vscode/
+__pycache__/
+node_modules/
