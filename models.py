@@ -5,7 +5,7 @@ from flask_migrate import Migrate
 import json
 
 
-db_name='fyyur1'
+db_name='fyyur'
 db_path = f'postgres://postgres:1111@localhost:5432/{db_name}'
 
 db = SQLAlchemy()
@@ -44,9 +44,9 @@ class Venue(db.Model):
     facebook_link = db.Column(db.String(120))
 
     genres = db.Column(ARRAY(db.String()))
-    website = db.Column(db.String())
-    seeking_talent = db.Column(db.String())
-    seeking_description = db.Column(db.String())
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean())
+    seeking_description = db.Column(db.String(120))
     
     def insert(self):
         try:
@@ -56,8 +56,6 @@ class Venue(db.Model):
             db.session.rollback()
 
     def update(self):
-        print(']=========update')
-        print(self)
         try:
             db.session.add(self)
             db.session.commit()
@@ -97,18 +95,15 @@ class Artist(db.Model):
     state = db.Column(db.String(120))
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
-    image_link = db.Column(db.String(500))
+    image_link = db.Column(db.String(120))
     facebook_link = db.Column(db.String(120))
 
     genres = db.Column(ARRAY(db.String()))
-    website = db.Column(db.String())
-    seeking_talent = db.Column(db.String())
-    seeking_description = db.Column(db.String())
+    website = db.Column(db.String(120))
+    seeking_talent = db.Column(db.Boolean())
+    seeking_description = db.Column(db.String(120))
     
     def insert(self):
-        
-        print('===============')
-        print(self)
         try:
             db.session.add(self)
             db.session.commit()
