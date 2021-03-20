@@ -4,10 +4,17 @@
 <style>
 	.btn-option{
 		font-size: x-large;
+		cursor: pointer;
 	}
 	.btn-option:hover{
 		font-weight: bold;
 		text-decoration: none;
+	}
+	.btn-delete{
+		color:#f00;
+	}
+	.btn-update{
+		color:#00f
 	}
 </style>
 <div class="row">
@@ -17,7 +24,7 @@
 		</h1>
 		<p class="subtitle">
 			ID: {{ artist.id }}
-			<a id='btnDelete' href="#" class='btn-delete btn-option'>&cross;</a>
+			<span id='btnDelete' class='btn-delete btn-option'>&cross;</span>
 			<a id='btnEdit' href="/artists/{{artist.id}}/edit" class='btn-update btn-option'>🖊️</a>
 
 		</p>
@@ -84,7 +91,7 @@
 		<script>
 			document.getElementById('btnDelete').addEventListener('click', ()=>{
 				if(confirm("Are you sure you want to delete:: {{artist.name}}")){
-					fetch(`/aetists/{{artist.id}}/`, {
+					fetch(`/artists/{{artist.id}}`, {
 						method: 'DELETE', 
 						headers:{'Content-Type':'Application/json'},
 					}).then(res=> res.json())

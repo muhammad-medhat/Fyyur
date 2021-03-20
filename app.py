@@ -299,7 +299,7 @@ def create_app(test_config=None):
       data={
         "id":                  art.id ,
         "name":                art.name,
-        "genres":              [art.genres],
+        "genres":              art.genres,
         "city":                art.city,
         "state":               art.state, 
         "phone":               art.phone,
