@@ -4,21 +4,15 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
 
-
-db_name='fyyur'
-db_path = f'postgres://postgres:1111@localhost:5432/{db_name}'
-
 db = SQLAlchemy()
 
 '''
 setup_db(app)
 Binds the flask application with the sqlclemy service
 '''
-def setup_db(app, db_path=db_path):
-    SECRET_KEY = 'secret'
-    app.config['SECRET_KEY'] = SECRET_KEY
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_path
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+def setup_db(app):
+
+    app.config.from_object('config')
     db.app=app
     db.init_app(app)    
     mg=Migrate(app, db)
@@ -57,7 +51,7 @@ class Venue(db.Model):
 
     def update(self):
         try:
-            db.session.add(self)
+            print(self.id)
             db.session.commit()
         except:
             db.session.rollback()
@@ -104,11 +98,14 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(120))
     
     def insert(self):
+        print('============= INSERT ===========')
         try:
             db.session.add(self)
             db.session.commit()
+            print('============= INSERT OK===========')
         except:
             db.session.rollback()
+            print('============= INSERT error===========')
 
     def update(self):
         try:
@@ -118,10 +115,15 @@ class Artist(db.Model):
             db.session.rollback()
 
     def delete(self):
+        print('==== artist delete ============')
+        
         try:
             db.session.delete(self)
             db.session.commit()
         except:
+            print('==== error delete ============')
+            print(dir(db.session))
+            print('=======================================')
             db.session.rollback()
 
     def format(self):

@@ -1,12 +1,16 @@
-#----------------------------------------------------------------------------#
-# Imports
-#----------------------------------------------------------------------------#
-
 import json
 from operator import pos
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for
+from flask import (
+    Flask, 
+    render_template, 
+    request, 
+    Response, 
+    flash, 
+    redirect, 
+    url_for
+)
 from flask.globals import session
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
@@ -16,12 +20,8 @@ from flask_wtf import Form
 from forms import *
 
 import pprint
-# from flask_migrate import Migrate
-# from flask import *
 from sqlalchemy import *
-# from sqlalchemy import String, JSON
 from flask_wtf import FlaskForm as BaseForm
-# from flask_marshmallow import Marshmallow
 from models import db, Venue, Artist, Show, setup_db
 
 #----------------------------------------------------------------------------#
@@ -137,14 +137,23 @@ def create_app(test_config=None):
       return render_template('pages/home.html')
 
 
+
+
+                                  
+#                                  
+# __   _____ _ __  _   _  ___  ___ 
+# \ \ / / _ \ '_ \| | | |/ _ \/ __|
+#  \ V /  __/ | | | |_| |  __/\__ \
+#   \_/ \___|_| |_|\__,_|\___||___/
+#                                  
+#                                  
+
+
     #  Venues
     #  ----------------------------------------------------------------
 
     @app.route('/venues')
     def venues():
-      # TODO: replace with real venues data.
-      #       num_shows should be aggregated based on number of upcoming shows per venue.
-
       vens = Venue.query.all()
       city_state = db.session.query(Venue.city, Venue.state).group_by(Venue.city, Venue.state).all()
       d=[]
@@ -224,41 +233,29 @@ def create_app(test_config=None):
 
     @app.route('/venues/create', methods=['POST'])
     def create_venue_submission():
-      # TODO: insert form data as a new Venue record in the db, instead
-      # TODO: modify data to be the data object returned from db insertion
 
       form = VenueForm()
       
-      post_data = {
-          "name"          : form.name.data, 
-          "city"          : form.city.data, 
-          "state"         : form.state.data, 
-          "phone"         : form.phone.data, 
-          "address"       : form.address.data , 
-          "genres"        : form.genres.data , 
-          "facebook_link" : form.facebook_link.data 
-      }
-      print(post_data)
+      # Getting posted data execluding the form token
+      post_data={}
+      for k, v in form.data.items():
+            if k != 'csrf_token':
+              post_data[k] = v
+              
       try :
           if form.validate_on_submit():
-            v = Venue(
-              name=           post_data['name'],
-              city=           post_data['city'],
-              state=          post_data['state'],
-              phone=          post_data['phone'],
-              address=        post_data['address'],
-              genres=         post_data['genres'],
-              facebook_link=  post_data['facebook_link']
-            )
-
-            v.insert()          
+            # Setting posted data to the object
+            ven = Venue()
+            for k, v in post_data.items():
+              setattr(ven, k,  v)
+            ven.insert()          
             # on successful db insert, flash success
             flash(f"Venue  {request.form['name'] } was successfully listed!")
           else:
               flash(f"An error occurred. Venue {request.form['name']} could not be listed.")
 
       except:
-          # TODO: on unsuccessful db insert, flash an error instead.
+          # on unsuccessful db insert, flash an error instead.
           flash(f"An error occurred. Venue {request.form['name']} could not be listed.")
       finally:
           flash(form.errors)
@@ -267,14 +264,64 @@ def create_app(test_config=None):
       # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
       return redirect(url_for('index'))
 
+    #  Edit Venue
+    #  ----------------------------------------------------------------
+    @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
+    def edit_venue(venue_id):
+      flash(f'Editing Veenue: {venue_id}')
+      form = VenueForm()
+      v = Venue.query.get(venue_id)
+      return render_template('forms/edit_venue.html', form=form, venue=v)
+
+    @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
+    def edit_venue_submission(venue_id):
+      v = Venue.query.get(venue_id)
+      form = VenueForm()
+      # Getting posted data execluding the form token
+      post_data={}
+      for key, val in form.data.items():
+          if key != 'csrf_token':
+            post_data[key] = val
+      try :
+        if form.validate_on_submit():
+          # Setting posted data to the object
+          for key, val in post_data.items():
+            setattr(v, key,  val)
+          # print(v)         
+          # print(v.format())         
+          v.update()
+          flash(f"Venue  {request.form['name'] } was successfully edited!")
+        else:
+          flash(f"An error occurred. Venue {request.form['name']} could not be edited.")
+      except:
+        flash(f"An error occurred. Venue {request.form['name']} could not be edited.")
+
+      return redirect(url_for('show_venue', venue_id=venue_id))
 
 
+    #  Delete Venue
+    #  ----------------------------------------------------------------
     @app.route('/venues/<venue_id>', methods=['DELETE'])
     def delete_venue(venue_id):
-      v = Venue.query.get(venue_id)
-      if v:
-          v.delete()
+      print('=============== delete ===============')
+      try:            
+        v = Venue.query.get(venue_id)
+        if v:
+            v.delete()
+            flash(f"Venue deleted.")
+      except:
+        flash(f"An error occurred. Venue could not be deleted.")
       return redirect(url_for('index'))
+
+
+
+#                 _   _     _       
+#      /\        | | (_)   | |      
+#     /  \   _ __| |_ _ ___| |_ ___ 
+#    / /\ \ | '__| __| / __| __/ __|
+#   / ____ \| |  | |_| \__ \ |_\__ \
+#  /_/    \_\_|   \__|_|___/\__|___/
+
 
     #  Artists
     #  ----------------------------------------------------------------
@@ -335,84 +382,6 @@ def create_app(test_config=None):
 
       return render_template('pages/show_artist.html', artist=data)
 
-    #  Update
-    #  ----------------------------------------------------------------
-    @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
-    def edit_artist(artist_id):
-      form = ArtistForm()  
-      artist =  Artist.query.get(artist_id)
-      # TODO: populate form with fields from artist with ID <artist_id>
-      return render_template('forms/edit_artist.html', form=form, artist=artist)
-
-    @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
-    def edit_artist_submission(artist_id):
-      # TODO: take values from the form submitted, and update existing
-      # artist record with ID <artist_id> using the new attributes
-
-      return redirect(url_for('show_artist', artist_id=artist_id))
-
-    @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
-    def edit_venue(venue_id):
-      form = VenueForm()
-      v = Venue.query.get(venue_id)
-
-      venue={
-        "id": v.id,
-        "name": v.name,
-        "genres": v.genres,
-        "address": v.address,
-        "city": v.city, 
-        "state": v.state,
-        "phone": v.phone,
-        "website": v.website,
-        "facebook_link": v.facebook_link,
-        "seeking_talent": v.seeking_talent,
-        "seeking_description": v.seeking_description, 
-        "image_link": v.image_link
-      }
-      return render_template('forms/edit_venue.html', form=form, venue=venue)
-
-    @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
-    def edit_venue_submission(venue_id):
-      v = Venue.query.get(venue_id)
-      form = VenueForm()
-      post_data = {
-          "name"          : form.name.data, 
-          "city"          : form.city.data, 
-          "state"         : form.state.data, 
-          "phone"         : form.phone.data, 
-          "address"       : form.address.data , 
-          "genres"        : form.genres.data , 
-          "facebook_link" : form.facebook_link.data,
-          "image_link"    : form.image_link.data 
-      }
-      try :
-        print('=== befor validation ========')
-        print(form.errors)
-        if form.validate_on_submit():
-          print('===after validation ========')
-
-          v = Venue(
-            name=           post_data['name'],
-            city=           post_data['city'],
-            state=          post_data['state'],
-            phone=          post_data['phone'],
-            address=        post_data['address'],
-            genres=         post_data['genres'],
-            facebook_link=  post_data['facebook_link'],
-            image_link=     post_data['image_link']
-          )
-          print(v.format())
-          print('=======================')
-          v.update()
-          print('update')
-          flash(f"Venue  {request.form['name'] } was successfully edited!")
-        else:
-          flash(f"An error occurred. Venue {request.form['name']} could not be edited.")
-      except:
-        flash(f"An error occurred. Venue {request.form['name']} could not be edited.")
-
-      return redirect(url_for('show_venue', venue_id=venue_id))
 
     #  Create Artist
     #  ----------------------------------------------------------------
@@ -426,33 +395,19 @@ def create_app(test_config=None):
     def create_artist_submission():
 
       form = ArtistForm()
-
-      post_data = {
-          "name"          : form.name.data, 
-          "city"          : form.city.data, 
-          "state"         : form.state.data, 
-          "phone"         : form.phone.data, 
-          "address"       : form.address.data , 
-          "genres"        : form.genres.data , 
-          "image_link" : form.image_link.data ,
-          "facebook_link" : form.facebook_link.data 
-      }
-      print(form)
-      print(post_data)
+      
+      # Getting posted data execluding the form token
+      post_data={}
+      for k, v in form.data.items():
+            if k != 'csrf_token':
+              post_data[k] = v
+              
       try :
           if form.validate_on_submit():
-            art = Artist(
-              name=           post_data['name'],
-              city=           post_data['city'],
-              state=          post_data['state'],
-              phone=          post_data['phone'],
-              address=        post_data['address'],
-              genres=         post_data['genres'],
-              image_link=     post_data['image_link'],
-              facebook_link=  post_data['facebook_link']
-            )
-            print(art)
-            print('=== INSERT ===')
+            # Setting posted data to the object
+            art = Artist()
+            for k, v in post_data.items():
+              setattr(art, k,  v)
             art.insert()          
             # on successful db insert, flash success
             flash(f"Artist  {request.form['name'] } was successfully listed!")
@@ -460,13 +415,63 @@ def create_app(test_config=None):
               flash(f"An error occurred. Artist {request.form['name']} could not be listed.")
 
       except:
+          # on unsuccessful db insert, flash an error instead.
           flash(f"An error occurred. Artist {request.form['name']} could not be listed.")
       finally:
           flash(form.errors)
 
 
+      # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
       return redirect(url_for('index'))
 
+    #  Edit Artist
+    #  ----------------------------------------------------------------
+    @app.route('/artists/<int:artist_id>/edit', methods=['GET'])
+    def edit_artist(artist_id):
+      flash(f'Editing Veenue: {artist_id}')
+      form = ArtistForm()
+      v = Artist.query.get(artist_id)
+      return render_template('forms/edit_artist.html', form=form, artist=v)
+
+    @app.route('/artists/<int:artist_id>/edit', methods=['POST'])
+    def edit_artist_submission(artist_id):
+      v = Artist.query.get(artist_id)
+      form = ArtistForm()
+      # Getting posted data execluding the form token
+      post_data={}
+      for key, val in form.data.items():
+          if key != 'csrf_token':
+            post_data[key] = val
+      try :
+        if form.validate_on_submit():
+          # Setting posted data to the object
+          for key, val in post_data.items():
+            setattr(v, key,  val)
+          # print(v)         
+          # print(v.format())         
+          v.update()
+          flash(f"Artist  {request.form['name'] } was successfully edited!")
+        else:
+          flash(f"An error occurred. Artist {request.form['name']} could not be edited.")
+      except:
+        flash(f"An error occurred. Artist {request.form['name']} could not be edited.")
+
+      return redirect(url_for('show_artist', artist_id=artist_id))
+
+
+    #  Delete Artist
+    #  ----------------------------------------------------------------
+    @app.route('/artists/<artist_id>', methods=['DELETE'])
+    def delete_artist(artist_id):
+      print('=============== delete ===============')
+      try:            
+        art = Artist.query.get(artist_id)
+        if art:
+            art.delete()
+            flash(f"Artist deleted.")
+      except:
+        flash(f"An error occurred. Artist could not be deleted.")
+      return redirect(url_for('index'))
 
 
     #  Shows
@@ -495,7 +500,7 @@ def create_app(test_config=None):
             "artist_image_link": Artist.query.get(s.artist_id).image_link,
             "start_time": s.start_time
           } for s in shows_list]
-      print(ret)
+      # print(ret)
       return render_template('pages/shows.html', shows=ret)
 
     @app.route('/shows/create')

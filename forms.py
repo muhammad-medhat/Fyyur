@@ -141,15 +141,14 @@ class ArtistForm(FlaskForm):
         'state', validators=[DataRequired()],
         choices=states
     )
-    phone = StringField(
-        # TODO implement validation logic for state
-        'phone'
-    )
     address = StringField(
         'address', validators=[DataRequired()]
     )
+    phone = StringField(
+        'phone', validators=[DataRequired()]
+    )
     image_link = StringField(
-        'image_link'
+        'image_link', validators=[]
     )
     genres = SelectMultipleField(
         # TODO implement enum restriction
@@ -158,7 +157,7 @@ class ArtistForm(FlaskForm):
     )
     facebook_link = StringField(
         'facebook_link', validators=[URL()]
-    )
+    )    
     website = StringField(
         'website', validators=[URL()]
     )
