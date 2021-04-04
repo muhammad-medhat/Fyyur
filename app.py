@@ -3,12 +3,12 @@ from operator import pos
 import dateutil.parser
 import babel
 from flask import (
-    Flask, 
-    render_template, 
-    request, 
-    Response, 
-    flash, 
-    redirect, 
+    Flask,
+    render_template,
+    request,
+    Response,
+    flash,
+    redirect,
     url_for
 )
 from flask.globals import session
@@ -24,31 +24,18 @@ from sqlalchemy import *
 from flask_wtf import FlaskForm as BaseForm
 from models import db, Venue, Artist, Show, setup_db
 
-#----------------------------------------------------------------------------#
-# App Config.
-#----------------------------------------------------------------------------#
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     setup_db(app)
 
-
-    # TODO: connect to a local postgresql database
-
-
-
-    # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-    #----------------------------------------------------------------------------#
-    # Filters.
-    #----------------------------------------------------------------------------#
-
     def format_datetime(value, format='medium'):
-      date = dateutil.parser.parse(value)
-      if format == 'full':
-          format="EEEE MMMM, d, y 'at' h:mma"
-      elif format == 'medium':
-          format="EE MM, dd, y h:mma"
-      return babel.dates.format_datetime(date, format)
+        date = dateutil.parser.parse(value)
+        if format == 'full':
+            format = "EEEE MMMM, d, y 'at' h:mma"
+        elif format == 'medium':
+            format = "EE MM, dd, y h:mma"
+        return babel.dates.format_datetime(date, format)
 
     app.jinja_env.filters['datetime'] = format_datetime
 
@@ -60,32 +47,38 @@ def create_app(test_config=None):
         """
         Function to get shows of this venue
         Args:
-            sh (str, optional): Defaults to 'all' gets all shows for the selected venue.
-            sh (str, optional): 'nx' gets all next shows for the selected venue.
-            sh (str, optional): 'pv' gets all previous shows for the selected venue.
+            sh (str, optional):
+                Defaults to 'all' gets all shows for the selected venue.
+            sh (str, optional):
+                'nx' gets all next shows for the selected venue.
+            sh (str, optional):
+                'pv' gets all previous shows for the selected venue.
         """
-        venue_shows=[]
+        venue_shows = []
         if sh == 'nx':
-            # shows_list = db.session.query(Show)\
-            #                           .join(Venue, Show.venue_id == Venue.id)\
-            #                           .join(Artist, Show.artist_id == Artist.id)\
-            #                           .all()
             # GET Upcoming shows
             venue_shows = db.session.query(Show)\
                                     .join(Venue)\
                                     .join(Artist)\
-                                    .filter( 
-                                      Venue.id==venue_id, Show.start_time>datetime.now()
+                                    .filter(
+                                      Venue.id == venue_id,
+                                      Show.start_time > datetime.now()
                                     ).all()
-            
-        elif sh=='pv':
+
+        elif sh == 'pv':
             # GET previous shows
-            venue_shows = db.session.query(Show).join(Venue).join(Artist).filter( 
-                                    Venue.id==venue_id, Show.start_time<datetime.now()
-                                    ).all()        
+            venue_shows = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist).filter(
+                                      Venue.id == venue_id,
+                                      Show.start_time < datetime.now()
+                                    ).all()
         else:
             # GET all shows
-            venue_shows = db.session.query(Show).join(Venue).join(Artist).filter( Venue.id==venue_id).all()
+            venue_shows = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter(Venue.id == venue_id).all()
         # print(venue_shows)
         return venue_shows
 
@@ -94,36 +87,41 @@ def create_app(test_config=None):
         """
         Function to get shows of this venue
         Args:
-            sh (str, optional): Defaults to 'all' gets all shows for the selected venue.
-            sh (str, optional): 'nx' gets all next shows for the selected venue.
-            sh (str, optional): 'pv' gets all previous shows for the selected venue.
+            sh (str, optional):
+                Defaults to 'all' gets all shows for the selected venue.
+            sh (str, optional):
+                'nx' gets all next shows for the selected venue.
+            sh (str, optional):
+                'pv' gets all previous shows for the selected venue.
         """
-        venue_shows=[]
+        venue_shows = []
         if sh == 'nx':
 
             # GET Upcoming shows
             artist_shows = db.session.query(Show)\
                                     .join(Venue)\
                                     .join(Artist)\
-                                    .filter( 
-                                      Artist.id==artist_id, Show.start_time>datetime.now()
+                                    .filter(
+                                      Artist.id == artist_id,
+                                      Show.start_time > datetime.now()
                                     ).all()
-            
-        elif sh=='pv':
+
+        elif sh == 'pv':
             # GET previous shows
             venue_shows = db.session.query(Show)\
                                     .join(Venue)\
                                     .join(Artist)\
-                                    .filter( 
-                                      Artist.id==artist_id, Show.start_time<datetime.now()
-                                    ).all()        
+                                    .filter(
+                                      Artist.id == artist_id,
+                                      Show.start_time < datetime.now()
+                                    ).all()
         else:
             # GET all shows
             venue_shows = db.session.query(Show)\
                                     .join(Venue)\
                                     .join(Artist)\
-                                    .filter( 
-                                      Artist.id==artist_id
+                                    .filter(
+                                      Artist.id == artist_id
                                     ).all()
         return venue_shows
 
@@ -256,7 +254,8 @@ def create_app(test_config=None):
 
       except:
           # on unsuccessful db insert, flash an error instead.
-          flash(f"An error occurred. Venue {request.form['name']} could not be listed.")
+          flash(f"An error occurred. Venue {request.form['name']}"+\
+                "could not be listed.")
       finally:
           flash(form.errors)
 
@@ -463,15 +462,21 @@ def create_app(test_config=None):
     #  ----------------------------------------------------------------
     @app.route('/artists/<artist_id>', methods=['DELETE'])
     def delete_artist(artist_id):
-      print('=============== delete ===============')
+      print('=============== Delete endpoint ===============')
       try:            
         art = Artist.query.get(artist_id)
         if art:
+          # print(art)
+          if art.has_shows():
+            flash(f"Artist {art.name} enrolled in shows",'error' )
+          else:          
             art.delete()
-            flash(f"Artist deleted.")
+            flash("Artist deleted.")
       except:
-        flash(f"An error occurred. Artist could not be deleted.")
-      return redirect(url_for('index'))
+        flash(f"An error occurred. Artist could not be deleted.", 'error')
+      return render_template('pages/home.html')
+
+      # return redirect(url_for('index'))
 
 
     #  Shows
@@ -479,15 +484,7 @@ def create_app(test_config=None):
 
     @app.route('/shows')
     def shows():
-    #       num_shows should be aggregated based on number of upcoming shows per venue.
-    #   q = text("""
-    #       select v.id as venue_id , v.name as venue_name, a.id as artist_id, a.name as artist_name, 
-    #       a.image_link as artist_image_link, s.start_time
-    #       from shows s 
-    #       join venues v on v.id=s.venue_id
-    #       join artists a on a.id=s.artist_id
-    # """)
-    #   res = db.engine.execute(q)    
+ 
       shows_list = db.session.query(Show)\
           .join(Venue, Show.venue_id == Venue.id)\
           .join(Artist, Show.artist_id == Artist.id)\

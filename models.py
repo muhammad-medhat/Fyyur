@@ -62,7 +62,12 @@ class Venue(db.Model):
             db.session.commit()
         except:
             db.session.rollback()
+    
+    # check has shows function
+    def has_shows(self):
 
+        return len(self.get_shows()) >= 0
+    
     def format(self):
         return {
             "id": self.id,
@@ -141,6 +146,13 @@ class Artist(db.Model):
             "seeking_talent": self.seeking_talent, 
             "seeking_description ": self.seeking_description
     }    
+    # chcek has shows function
+    def has_shows(self):
+        print('******************************')
+        print(self.format())
+        print(len(self.get_shows()) >= 0)
+        return len(self.get_shows()) >= 0
+    
     def get_shows(self, sh='al'):
         return []
 
