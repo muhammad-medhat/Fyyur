@@ -2,7 +2,7 @@ import os
 from sqlalchemy import *
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-import json
+import json, datetime
 
 db = SQLAlchemy()
 
@@ -57,15 +57,22 @@ class Venue(db.Model):
             db.session.rollback()
 
     def delete(self):
+        # print('venu delete')
         try:
             db.session.delete(self)
             db.session.commit()
         except:
             db.session.rollback()
+            print('========= error =================')
+            print(db)
     
     # check has shows function
     def has_shows(self):
-        return len(self.get_shows()) >= 0
+        # ret = len(self.get_shows())
+        # print(f'- has shows func {ret}')
+        # print(len(self.get_shows())>=0)
+        # print('==========================')
+        return len(self.get_shows()) > 0
     
     def format(self):
         return {
@@ -82,6 +89,38 @@ class Venue(db.Model):
             "seeking_talent": self.seeking_talent, 
             "seeking_description ": self.seeking_description
     }
+    def get_shows(self, sh='al'):
+        venue_shows=[]
+        q=''
+        if sh == 'nx':
+            # GET Upcoming shows
+            q = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter(
+                                        Venue.id == self.id,
+                                        Show.start_time > datetime.now()
+                                    )
+            venue_shows = q.all()
+        elif sh == 'pv':
+            # GET previous shows
+            q = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist).filter(
+                                        Venue.id == self.id,
+                                        Show.start_time < datetime.now()
+                                    )
+            venue_shows = q.all()
+        else:
+            # GET all shows
+            q = db.session.query(Show)\
+                                    .join(Venue)\
+                                    .join(Artist)\
+                                    .filter(Venue.id == self.id)
+            venue_shows = q.all()
+        # print(q)
+        # print(venue_shows)
+        return venue_shows
 
 
 class Artist(db.Model):

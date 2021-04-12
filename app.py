@@ -9,7 +9,8 @@ from flask import (
     Response,
     flash,
     redirect,
-    url_for
+    url_for, 
+    abort
 )
 from flask.globals import session
 from flask_moment import Moment
@@ -127,7 +128,8 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        return render_template('pages/home.html')
+          # flash('Fyyur app', category='warning')
+          return render_template('pages/home.html')
 
     #  Venues
     #  ----------------------------------------------------------------
@@ -202,7 +204,7 @@ def create_app(test_config=None):
       if v:
           data = v
       else:
-          return "NO Data"
+          abort(404)
       return render_template('pages/show_venue.html', venue = v)
 
     #  Create Venue
@@ -278,11 +280,10 @@ def create_app(test_config=None):
     #  ----------------------------------------------------------------
     @app.route('/venues/<venue_id>', methods=['DELETE'])
     def delete_venue(venue_id):
-      print('=============== Delete endpoint ===============')
       try:
         ven = Venue.query.get(venue_id)
         if ven:
-          # print(art)
+          print(ven.has_shows())
           if ven.has_shows():
             flash(f"Venue {ven.name} enrolled in shows",'error')
           else:          
@@ -290,7 +291,7 @@ def create_app(test_config=None):
             flash("Venue deleted.")
       except:
         flash(f"An error occurred. Venue could not be deleted.", 'error')
-      
+      return redirect(url_for('index'))
       return render_template('pages/home.html')
     
     #  Artists
