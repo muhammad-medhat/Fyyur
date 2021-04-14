@@ -163,7 +163,8 @@ def create_app(test_config=None):
           "data": [{
             'id': v.id,
             'name': v.name,
-            'num_upcoming_shows': get_venue_shows(v.id, 'nx')
+            # 'num_upcoming_shows': get_venue_shows(v.id, 'nx')
+            'num_upcoming_shows': len(v.get_shows('nx'))
             } for v in res]
         }
         return render_template('pages/search_venues.html',
@@ -191,21 +192,23 @@ def create_app(test_config=None):
           "artist_name": Artist.query.get(s.artist_id).name,
           "artist_image_link": Artist.query.get(s.artist_id).image_link,
           "start_time": s.start_time 
-          } for s in get_venue_shows(v.id, 'pv')],
+          } for s in v.get_shows('pv')],
         "upcoming_shows": [{
           "artist_id": s.artist_id,
           "artist_name": Artist.query.get(s.artist_id).name,
           "artist_image_link": Artist.query.get(s.artist_id).image_link,
           "start_time": s.start_time
-          } for s in get_venue_shows(v.id, 'nx')],
-        "past_shows_count": len(get_venue_shows(v.id, 'pv')),
-        "upcoming_shows_count": len(get_venue_shows(v.id, 'nx')),
+          } for s in v.get_shows('nx')],
+        "past_shows_count": len(v.get_shows('pv')),
+        "upcoming_shows_count": len(v.get_shows('nx')),
       }
       if v:
           data = v
+          # print([ven.format()] for ven in v.get_shows())
       else:
           abort(404)
-      return render_template('pages/show_venue.html', venue = v)
+      print(data1)
+      return render_template('pages/show_venue.html', venue = data1  )
 
     #  Create Venue
     #  ----------------------------------------------------------------

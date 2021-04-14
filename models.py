@@ -2,7 +2,9 @@ import os
 from sqlalchemy import *
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-import json, datetime
+import json
+
+from datetime import datetime
 
 db = SQLAlchemy()
 
@@ -118,7 +120,9 @@ class Venue(db.Model):
                                     .join(Artist)\
                                     .filter(Venue.id == self.id)
             venue_shows = q.all()
-        # print(q)
+        print(q)
+        print(datetime.now())
+        print('======================')
         # print(venue_shows)
         return venue_shows
 

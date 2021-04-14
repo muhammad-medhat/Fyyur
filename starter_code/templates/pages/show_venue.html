@@ -1,40 +1,19 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Venue Search{% endblock %}
 {% block content %}
-<style>
-	.btn-option{
-		font-size: x-large;
-		cursor: pointer;
-	}
-	.btn-option:hover{
-		font-weight: bold;
-		text-decoration: none;
-	}
-	.btn-delete{
-		color:#f00;
-	}
-	.btn-update{
-		color:#00f
-	}
-</style>
 <div class="row">
 	<div class="col-sm-6">
 		<h1 class="monospace">
 			{{ venue.name }}
 		</h1>
 		<p class="subtitle">
-			ID: {{ venue.id }}		
-			<span id='btnDelete' class='btn-delete btn-option'>&cross;</span>
-			<a id='btnEdit' href="/venues/{{venue.id}}/edit" class='btn-update btn-option'>🖊️</a>
-
+			ID: {{ venue.id }}
 		</p>
-		{%if venue.generes %}
 		<div class="genres">
 			{% for genre in venue.genres %}
 			<span class="genre">{{ genre }}</span>
 			{% endfor %}
 		</div>
-		{%endif%}
 		<p>
 			<i class="fas fa-globe-americas"></i> {{ venue.city }}, {{ venue.state }}
 		</p>
@@ -89,24 +68,12 @@
 			<div class="tile tile-show">
 				<img src="{{ show.artist_image_link }}" alt="Show Artist Image" />
 				<h5><a href="/artists/{{ show.artist_id }}">{{ show.artist_name }}</a></h5>
-				<h6>{{show.start_time}}</h6>
-				<h6>{# {show.start_time|datetime('full') }#}</h6>
+				<h6>{{ show.start_time|datetime('full') }}</h6>
 			</div>
 		</div>
 		{% endfor %}
 	</div>
 </section>
-<script>
-	document.getElementById('btnDelete').addEventListener('click', ()=>{
-		if(confirm("Are you sure you want to delete:: {{venue.name}}")){
-			fetch(`/venues/{{venue.id}}`, {
-				method: 'DELETE', 
-				headers:{'Content-Type':'Application/json'},
-			}).then(res=> res.json())
-			.then(location.replace('/'))	
-		}
 
-	})
-</script>
 {% endblock %}
 
