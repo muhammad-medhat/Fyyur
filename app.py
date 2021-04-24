@@ -43,45 +43,45 @@ def create_app(test_config=None):
     # -----------------------------------------
     # Functions
     # -----------------------------------------
-    def get_venue_shows(venue_id, sh='al'):
-            # return []
-        """
-        Function to get shows of this venue
-        Args:
-            sh (str, optional):
-                Defaults to 'all' gets all shows for the selected venue.
-            sh (str, optional):
-                'nx' gets all next shows for the selected venue.
-            sh (str, optional):
-                'pv' gets all previous shows for the selected venue.
-        """
-        venue_shows = []
-        if sh == 'nx':
-            # GET Upcoming shows
-            venue_shows = db.session.query(Show)\
-                                    .join(Venue)\
-                                    .join(Artist)\
-                                    .filter(
-                                      Venue.id == venue_id,
-                                      Show.start_time > datetime.now()
-                                    ).all()
+    # def get_venue_shows(venue_id, sh='al'):
+    #         # return []
+    #     """
+    #     Function to get shows of this venue
+    #     Args:
+    #         sh (str, optional):
+    #             Defaults to 'all' gets all shows for the selected venue.
+    #         sh (str, optional):
+    #             'nx' gets all next shows for the selected venue.
+    #         sh (str, optional):
+    #             'pv' gets all previous shows for the selected venue.
+    #     """
+    #     venue_shows = []
+    #     if sh == 'nx':
+    #         # GET Upcoming shows
+    #         venue_shows = db.session.query(Show)\
+    #                                 .join(Venue)\
+    #                                 .join(Artist)\
+    #                                 .filter(
+    #                                   Venue.id == venue_id,
+    #                                   Show.start_time > datetime.now()
+    #                                 ).all()
 
-        elif sh == 'pv':
-            # GET previous shows
-            venue_shows = db.session.query(Show)\
-                                    .join(Venue)\
-                                    .join(Artist).filter(
-                                      Venue.id == venue_id,
-                                      Show.start_time < datetime.now()
-                                    ).all()
-        else:
-            # GET all shows
-            venue_shows = db.session.query(Show)\
-                                    .join(Venue)\
-                                    .join(Artist)\
-                                    .filter(Venue.id == venue_id).all()
-        # print(venue_shows)
-        return venue_shows
+    #     elif sh == 'pv':
+    #         # GET previous shows
+    #         venue_shows = db.session.query(Show)\
+    #                                 .join(Venue)\
+    #                                 .join(Artist).filter(
+    #                                   Venue.id == venue_id,
+    #                                   Show.start_time < datetime.now()
+    #                                 ).all()
+    #     else:
+    #         # GET all shows
+    #         venue_shows = db.session.query(Show)\
+    #                                 .join(Venue)\
+    #                                 .join(Artist)\
+    #                                 .filter(Venue.id == venue_id).all()
+    #     # print(venue_shows)
+    #     return venue_shows
 
     def get_artist_shows(artist_id, sh='al'):
             # return []
@@ -149,7 +149,8 @@ def create_app(test_config=None):
                 vlist['venues'] = [{
                   'id': v.id,
                   'name': v.name,
-                  'num_upcoming_shows': len(get_venue_shows(v.id, 'nx'))
+                  'num_upcoming_shows': len(v.get_shows('nx')),
+                  'num_previous_shows': len(v.get_shows('pv'))
                 } for v in vens]
             d.append(vlist)
         return render_template('pages/venues.html', areas=d)
